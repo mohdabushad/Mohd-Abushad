@@ -26,8 +26,4 @@ A simple command-line ATM simulation system built using Python's Object-Oriented
 
 ---
 
-## 💡 How to Run
 
-1. Make sure you have Python installed:
-```bash
-python --version
