@@ -1,5 +1,9 @@
+Mohd Abushad
+my first project
 #calulator based programme
 "A simple Python calculator that performs basic arithmetic operations like addition, subtraction, multiplication, and division."
+
+my second project
 # 🏦 ATM Simulation App (Python - OOP)
 
 A simple command-line ATM simulation system built using Python's Object-Oriented Programming concepts. This beginner-level project includes features like checking balance, depositing money, and withdrawing cash — all using encapsulation and methods.
