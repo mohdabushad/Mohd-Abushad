@@ -32,5 +32,13 @@ A simple command-line ATM simulation system built using Python's Object-Oriented
 - Input and Output
 
 ---
+<h3>my third project</h3>
+🛍️ MyShop - A basic Python console app to order samosa, pizza, and chola.
+<br>
+Features:
+- Uses OOP (class and methods)
+- Input-based menu
+- Great for Python beginners
+
 
 
