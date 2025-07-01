@@ -6,10 +6,10 @@ def sub(a,b):
     return a - b
 def mul(a,b):
     return a * b
-def div(a,b):
+def avg(a,b):
     if a and b == 0:
        return "can not fimd avr"
-    return a + b/2
+    return (a + b)/2
 # Using a while loop, I want to perform multiple calculator operations in a single run.
 while True:  
    print("\n select operation operation : \n 1.sum \n 2.sub \n 3.mul \n 4.avr")
@@ -29,7 +29,7 @@ while True:
    elif choice=="4":
       num1=float(input("enter  first num:"))
       num2=float(input("enter second num: ")) 
-      print("result avr of two num:",avr(num1,num2)) 
+      print("result avr of two num:",avg(num1,num2)) 
    else:
       print("invalid choice")  
 #end programme
