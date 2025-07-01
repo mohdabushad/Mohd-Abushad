@@ -7,7 +7,7 @@ class ATM:
 
     def deposit(self, amount):
         if amount > 0:
-            self.__balance +3= amount
+            self.__balance += amount
             print(f"₹{amount} deposited successfully!")
         else:
             print("Invalid deposit amount.")
