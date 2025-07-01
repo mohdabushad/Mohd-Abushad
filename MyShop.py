@@ -46,10 +46,10 @@ def main():
     # Run the menu in an infinite loop until user exits
     while True:
         # Display the menu
-        print("\nSelect menu:\n\n1. Samosa (15 rs)\n2. Pizza (100 rs)\n3. Chola (20 rs)\n4. Samosa and Chola\n")
+        print("\nSelect menu:\n\n1. Samosa (15 rs)\n2. Pizza (100 rs)\n3. Chola (20 rs)\n4. Samosa and Chola\n5. Exit\n")
         
         # Get user's choice
-        choice = input("Enter your choice (1,2,3,4): ")
+        choice = input("Enter your choice (1-5): ")
 
         # Based on choice, ask quantity and call the respective method
         if choice == "1":
@@ -68,6 +68,9 @@ def main():
             n = int(input("Enter how many samosas: "))
             m = int(input("Enter how many cholas: "))
             shop.item_samosa_chola(n, m)
+        elif choice == "5":
+            print(" Thanks for my shop ")
+            break
 
         else:
             # If invalid choice
