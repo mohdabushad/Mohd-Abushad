@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text to Speech</title>
+</head>
+<body>
+  <h2> Text to Speech</h2>
+  <textarea id="text" rows="4" cols="50" placeholder="Yahan kuch likho..."></textarea><br><br>
+  <button onclick="speakText()">🔊 Bolna Start karo</button>
+
+  <script>
+    function speakText() {
+      const text = document.getElementById("text").value;
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = "hi-IN"; // Hindi; use "en-US" for English
+      window.speechSynthesis.speak(speech);
+    }
+  </script>
+</body>
+</html>
