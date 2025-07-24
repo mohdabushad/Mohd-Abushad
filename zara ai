@@ -291,3 +291,18 @@ def main_process():
                 speak("Please specify an app to close.")
 
 main_process()
+
+
+
+
+import google.generativeai as genai
+
+# API Key configure karo
+genai.configure(api_key="AIzaSyBCAQ1L2idBhX5uJ8wrG4XBTdiFIuZwnVQ")
+
+# Model instance banao
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+def send(query):
+    response = model.generate_content(query)
+    return response.text
