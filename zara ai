@@ -1,10 +1,5 @@
 Zara ai
 
-
-
-
-
-
 import os
 import pyttsx3
 import speech_recognition as sr
@@ -20,21 +15,57 @@ import pytesseract
 import cv2
 import time
 from PIL import ImageGrab
-import pygetwindow as gw  
+import pygetwindow as gw
 import open_ai as ai
 import re
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'              
 
-def speak(audio):
-    print("shiri:", audio)
+# -------------------- CONFIG -------------------- #
+# Set your Tesseract path here
+pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+
+# Default input mode: 'voice' or 'text'
+INPUT_MODE = "voice"
+
+# Keep last YouTube search query safe
+last_search_query = ""
+
+# -------------------- TTS -------------------- #
+def speak(audio: str):
+    print("ZARA:", audio)
     engine = pyttsx3.init()
     voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[2].id)
+    # NOTE: voices index might differ per system. Adjust if needed.
+    try:
+        engine.setProperty('voice', voices[2].id)
+    except Exception:
+        pass
     engine.setProperty("rate", 170)
     engine.say(audio)
     engine.runAndWait()
 
-def command():
+# -------------------- INPUT HELPERS -------------------- #
+def select_input_mode_once():
+    """Ask once at startup which mode to use (text/voice)."""
+    global INPUT_MODE
+    try:
+        choice = input("Input mode [t=text, v=voice] (default=v): ").strip().lower()
+        if choice == 't':
+            INPUT_MODE = 'text'
+            speak("Text mode enabled.")
+        else:
+            INPUT_MODE = 'voice'
+            speak("Voice mode enabled.")
+    except Exception:
+        INPUT_MODE = 'voice'
+        speak("Voice mode enabled by default.")
+
+def get_command_text() -> str:
+    try:
+        return input("Type your command here: ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        return ""
+
+def get_command_voice() -> str:
     content = ""
     while content == "":
         r = sr.Recognizer()
@@ -42,21 +73,23 @@ def command():
             print("Say something!")
             speak("I am listening")
             r.pause_threshold = 1
-            audio = r.listen(source, phrase_time_limit=3)                            
             try:
-                content = r.recognize_google(audio, language='en-in')
-                content= mtranslate.translate(audio, to_language="hi", from_language="en-in")
-                speak(audio)
-                
-            except :                          
+                audio = r.listen(source, phrase_time_limit=4)
+                content = r.recognize_google(audio, language='en-IN')
+                print("You said:", content)
+            except Exception:
+                # speak("I didn't catch that, please say again")  # keep silent to avoid loops talking
                 pass
-                #print("Please try again...")
-                #speak("I don't understand")
-    return content
+    return content.lower()
 
-# 🔘 Function to click on screen text
+def get_command() -> str:
+    if INPUT_MODE == 'text':
+        return get_command_text()
+    else:
+        return get_command_voice()
 
-def click_on_text(target_text):
+# -------------------- OCR CLICK -------------------- #
+def click_on_text(target_text: str) -> bool:
     time.sleep(1)
     screenshot = ImageGrab.grab()
     screenshot.save("screen.png")
@@ -77,32 +110,32 @@ def click_on_text(target_text):
     speak(f"Text '{target_text}' not found on screen.")
     return False
 
-# 🔘 Function to close applications
-def close_application(app_name):
+# -------------------- CLOSE APPS -------------------- #
+def close_application(app_name: str):
     exe_name_map = {
-       "chrome": "chrome.exe",
-       "firefox": "firefox.exe",
-       "edge": "msedge.exe",
-       "notepad": "notepad.exe",
-       "vlc": "vlc.exe",
-       "spotify": "Spotify.exe",
-       "whatsapp": "WhatsApp.exe",
-       "telegram": "Telegram.exe",
-       "discord": "Discord.exe",
-       "calculator": "CalculatorApp.exe",
-       "word": "WINWORD.EXE",
-       "excel": "EXCEL.EXE",
-       "vs code": "Code.exe",
-       "paint": "mspaint.exe",
-       "cmd": "cmd.exe",
-       "powershell": "powershell.exe",
-       "zoom": "Zoom.exe",
-       "pycharm": "pycharm64.exe",
-       "obs": "obs64.exe",
-       "teams": "Teams.exe",
-       "file": "explorer.exe",
-       "control panel": "control.exe",
-       "setting": "SystemSetting.exe",
+        "chrome": "chrome.exe",
+        "firefox": "firefox.exe",
+        "edge": "msedge.exe",
+        "notepad": "notepad.exe",
+        "vlc": "vlc.exe",
+        "spotify": "Spotify.exe",
+        "whatsapp": "WhatsApp.exe",
+        "telegram": "Telegram.exe",
+        "discord": "Discord.exe",
+        "calculator": "CalculatorApp.exe",
+        "word": "WINWORD.EXE",
+        "excel": "EXCEL.EXE",
+        "vs code": "Code.exe",
+        "paint": "mspaint.exe",
+        "cmd": "cmd.exe",
+        "powershell": "powershell.exe",
+        "zoom": "Zoom.exe",
+        "pycharm": "pycharm64.exe",
+        "obs": "obs64.exe",
+        "teams": "Teams.exe",
+        "file": "explorer.exe",
+        "control panel": "control.exe",
+        "setting": "SystemSetting.exe",
     }
 
     exe_name = exe_name_map.get(app_name.lower(), f"{app_name}.exe")
@@ -117,69 +150,87 @@ def close_application(app_name):
         speak(f"Error occurred while closing {app_name}")
         print("Error:", e)
 
-def main_process():                             
-    
-    while True:                             
+# -------------------- MAIN LOOP -------------------- #
+def main_process():
+    global last_search_query, INPUT_MODE
 
-        request = command().lower()
-        speak(request)
+    select_input_mode_once()  # Ask at start
+
+    while True:
+        request = get_command().lower().strip()
+        if not request:
+            continue
+
+        print("USER:", request)
+        # Echo only in text mode to avoid TTS loops
+        if INPUT_MODE == 'text':
+            speak(request)
+
+        # Runtime switching between modes
+        if ("text mode" in request and ("on" in request or "enable" in request or "start" in request)) or "switch to text mode" in request:
+            INPUT_MODE = 'text'
+            speak("Text mode enabled.")
+            continue
+        if ("voice mode" in request and ("on" in request or "enable" in request or "start" in request)) or "switch to voice mode" in request:
+            INPUT_MODE = 'voice'
+            speak("Voice mode enabled.")
+            continue
 
         if "hi" in request:
-           speak("Welcome, Alfaaz how can I help you.")
-        if "banaya" in request:
-           speak("mujhe ek B.C.A group ne milkar banaya hai jinme Alfaz , Satyam , Himanshu ,deepak ,akash")   
+            speak("Welcome, Alfaaz how can I help you.")
+
+        elif "banaya" in request:
+            speak("I have been made by a BCA group which includes Alfaaz, SATYAM, Himanshu, Deepak, Akash")
+
         elif "whatsapp" in request and "bolo" in request:
-           match = re.search(r"(.*?)\s*ko\s*whatsapp\s*par\s*bolo\s*(.+)", request)
+            match = re.search(r"(.*?)\s*ko\s*whatsapp\s*par\s*bolo\s*(.+)", request)
+            if match:
+                contact = match.group(1).strip()
+                message = match.group(2).strip()
+                speak(f"{contact} ko WhatsApp par ye sandesh bhej raha hoon: {message}")
 
-           if match:
-               contact = match.group(1).strip()
-               message = match.group(2).strip()
-               speak(f"{contact} ko WhatsApp par ye sandesh bhej raha hoon: {message}")
-        
-               webbrowser.open("https://web.whatsapp.com")
-               time.sleep(25)
+                webbrowser.open("https://web.whatsapp.com")
+                time.sleep(25)
 
-               try:
-                 pyautogui.click(150, 200)  # Adjust this as needed
-                 time.sleep(2)
+                try:
+                    pyautogui.click(150, 200)  # Adjust this as needed
+                    time.sleep(2)
 
-                 pyautogui.write(contact)
-                 time.sleep(3)
-                 pyautogui.press("enter")
-                 time.sleep(2)
+                    pyautogui.write(contact)
+                    time.sleep(3)
+                    pyautogui.press("enter")
+                    time.sleep(2)
 
-                 pyautogui.write(message)
-                 time.sleep(1)
-                 pyautogui.press("enter")
+                    pyautogui.write(message)
+                    time.sleep(1)
+                    pyautogui.press("enter")
 
-                 print("Message sent - about to speak")  # DEBUG
-                 speak("Message bhej diya gaya hai.")
-               except Exception as e:
-                 print("ERROR:", e)
-                 speak("Message bhejne mein samasya aayi.")
-           else:
-            speak("WhatsApp command samajh nahi aaya. Kripya dobara try karein.")
+                    print("Message sent - about to speak")
+                    speak("Message bhej diya gaya hai.")
+                except Exception as e:
+                    print("ERROR:", e)
+                    speak("Message bhejne mein samasya aayi.")
+            else:
+                speak("WhatsApp command samajh nahi aaya. Kripya dobara try karein.")
 
         elif "play music" in request:
             speak("Playing music")
             song = random.randint(1, 3)
-            webbrowser.open("https://www.youtube.com/watch?v=8of5w7RgcTc&list=RD8of5w7RgcTc&start_radio=1")  # Placeholder
+            webbrowser.open("https://www.youtube.com/watch?v=8of5w7RgcTc&list=RD8of5w7RgcTc&start_radio=1")
+
         elif "open youtube" in request:
             speak("Opening YouTube")
             webbrowser.open("https://www.youtube.com")
 
-
-        
         elif "search" in request and "youtube" in request:
-           last_search_query = request.replace("search", "").replace("on youtube", "").strip()
-           speak(f"Searching {last_search_query} on YouTube")
-           webbrowser.open(f"https://www.youtube.com/results?search_query={last_search_query}")
-           speak("Here are the results. Say 'play first video' to start.")
+            last_search_query = request.replace("search", "").replace("on youtube", "").strip()
+            speak(f"Searching {last_search_query} on YouTube")
+            webbrowser.open(f"https://www.youtube.com/results?search_query={last_search_query}")
+            speak("Here are the results. Say 'play first video' to start.")
 
         elif "play first video" in request and last_search_query:
-           speak(f"Playing {last_search_query}")
-           pywhatkit.playonyt(last_search_query)
-
+            speak(f"Playing {last_search_query}")
+            pywhatkit.playonyt(last_search_query)
 
         elif "stop" in request or "play" in request:
             pyautogui.press("k")
@@ -188,9 +239,10 @@ def main_process():
         elif "full screen" in request:
             pyautogui.press("f")
             speak("Fullscreen enabled")
+
         elif "half screen" in request:
             pyautogui.press("f")
-            speak("halfscreen enabled")    
+            speak("halfscreen enabled")
 
         elif "mute" in request:
             pyautogui.press("m")
@@ -217,40 +269,62 @@ def main_process():
             task = request.replace("new task", "").strip()
             if task != "":
                 speak("Adding task: " + task)
-                with open("zara.txt", "a") as file:
+                with open("zara.txt", "a", encoding='utf-8') as file:
                     file.write(task + "\n")
 
         elif "speak task" in request:
-            with open("zara.txt", "r") as file:
-                speak("Work we have to do today is " + file.read())
+            try:
+                with open("zara.txt", "r", encoding='utf-8') as file:
+                    speak("Work we have to do today is " + file.read())
+            except FileNotFoundError:
+                speak("No tasks found yet.")
 
         elif "so work" in request:
-            with open("zara.txt", "r") as file:
-                task = file.read()
-                notification.notify(
-                title="Today's Work",
-                message=task
-                )
+            try:
+                with open("zara.txt", "r", encoding='utf-8') as file:
+                    task = file.read()
+                    notification.notify(
+                        title="Today's Work",
+                        message=task
+                    )
+            except FileNotFoundError:
+                speak("No tasks found to show.")
+
         elif "open" in request:
-           query = request.replace("open", "").strip()
-           pyautogui.press("super")          
-           pyautogui.typewrite(query)        
-           pyautogui.sleep(2)
-           pyautogui.press("enter") 
+            query = request.replace("open", "").strip()
+            pyautogui.press("super")
+            pyautogui.typewrite(query)
+            pyautogui.sleep(2)
+            pyautogui.press("enter")
+
         elif "wikipedia" in request:
-            request=request.replace("search wikipedia", "")
-            result = wikipedia.summary(request, sentences=2)
-            print(result)
-            speak(result) 
-        elif "search " in request: 
-            request=request.replace("search", "") 
-            webbrowser.open("https://www.google.com/search?q="+request) 
-        elif "hey" in request: 
-            request=request.replace("letion", "")
-            print(request)
-            response= ai.send(request)
-            print(request)
-            speak(response)
+            q = request.replace("search wikipedia", "").replace("wikipedia", "").strip()
+            if q:
+                try:
+                    result = wikipedia.summary(q, sentences=2)
+                    print(result)
+                    speak(result)
+                except Exception:
+                    speak("Couldn't fetch from Wikipedia. Try another query.")
+            else:
+                speak("Please tell me what to search on Wikipedia.")
+
+        elif request.startswith("search "):
+            q = request.replace("search", "").strip()
+            if q:
+                webbrowser.open("https://www.google.com/search?q=" + q)
+                speak("Here are the Google results")
+            else:
+                speak("Please tell me what to search.")
+
+        elif "hello" in request:
+            # This block seems to call your custom OpenAI wrapper
+            try:
+                response = ai.send(request)
+                speak(response)
+            except Exception as e:
+                print("AI ERROR:", e)
+                speak("AI response me problem aayi.")
 
         elif "screenshot" in request:
             if "center" in request:
@@ -263,8 +337,7 @@ def main_process():
                 region = (1400, 0, 500, 400)
                 area = "top right corner"
             else:
-                region = (0, 0, 1920, 1080)
- # default region
+                region = (0, 0, 1920, 1080)  # default region
                 area = "default region"
 
             now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -276,12 +349,15 @@ def main_process():
 
         elif "click" in request:
             button_name = request.replace("click", "").strip().lower()
-            speak(f"Trying to click on {button_name}")
-            result = click_on_text(button_name)
-            if result:
-                speak(f"Clicked on {button_name}")
+            if button_name:
+                speak(f"Trying to click on {button_name}")
+                result = click_on_text(button_name)
+                if result:
+                    speak(f"Clicked on {button_name}")
+                else:
+                    speak(f"Could not find any button named {button_name}")
             else:
-                speak(f"Could not find any button named {button_name}")
+                speak("Please tell me which text to click on.")
 
         elif "close" in request:
             app_name = request.replace("close", "").strip()
@@ -290,7 +366,19 @@ def main_process():
             else:
                 speak("Please specify an app to close.")
 
-main_process()
+        elif request in ["quit", "exit", "bye", "jarvish band karo", "stop jarvish"]:
+            speak("Jarvish band ho raha hai. Bye!")
+            break
+
+        else:
+            speak("Yeh command mujhe nahi aayi")
+
+
+if __name__ == "__main__":
+    main_process()
+
+
+
 
 
 
