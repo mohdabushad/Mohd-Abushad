@@ -1,275 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculator - by Abushad</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Lato', sans-serif;
-    }
-    body {
-      background-color: rgba(0, 0, 0, 0.802);
-      color: aliceblue;
-    }
-    .contanor {
-      margin: 120px auto;
-      height: 650px;
-      width: 950px;
-      border: 1px solid rgb(196, 190, 190);
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 1px 1px 5px 2px rgb(228, 228, 228);
-      background-color: rgb(75, 142, 48);
-    }
-    input {
-      margin-top: 50px;
-      width: 100%;
-      height: 60px;
-      text-align: right;
-      font-size: 30px;
-      background-color: black;
-      padding: 20px;
-      border: transparent;
-      border-radius: 10px;
-      color: rgba(181, 181, 181, 0.578);
-    }
-    button {
-      font-size: 25px;
-      height: 60px;
-      width: 60px;
-      margin-top: 30px;
-      margin-left: 15px;
-      border-radius: 50px;
-      background-color: rgb(0, 0, 0);
-      box-shadow: 1px 1px 5px 2px rgb(228, 228, 228);
-      color: aliceblue;
-      border: none;
-      cursor: pointer;
-    }
-    button:active {
-      background-color: rgb(32, 111, 180);
-      transform: scale(0.9);
-    }
-    .mar {
-      margin-top: 40px;
-    }
-    h1 {
-      margin-top: 60px;
-      font-size: 70px;
-      text-align: center;
-      color: cadetblue;
-    }
-    h1 span {
-      color: darkgoldenrod;
-    }
-    h2 {
-    
-      font-size: 40px;
-      text-align: center;
-    }
-    h2 span {
-      color: coral;
-    }
-    ul {
-      display: flex;
-      justify-content: center;
-      gap: 70px;
-      list-style: none;
-      border-bottom: 2px solid rgb(243, 243, 243);
-      padding-bottom: 20px;
-      width: 450px;
-      margin-left: 450px;
-      cursor: pointer;
-    }
-.dropdown {
-  display: none;
-  position: absolute;        /* Required for right alignment */                /* Adjust according to your layout */
-  right: 520px;               /* Align from the right */
-  background-color: transparent;
-  padding: 8px;
-  border-radius: 4px;
-  width: 430px;
-  color: black;
- 
-}
-
-    .dropdown button {
-      font-size: 25px;
-      height: 60px;
-      width: 60px;
-      margin-left: 15px;
-      border-radius: 50px;
-      background-color: rgb(206, 11, 11);
-      box-shadow: 1px 1px 5px 2px rgb(228, 228, 228);
-      color: aliceblue;
-      border: none;
-      cursor: pointer;
-    
-    }
-  </style>
-</head>
-<body>
-  <h1>Advanced <span>Calculator.</span></h1>
-  <h2>Created by <span>Abushad</span></h2>
-
-  <div class="contanor">
-    <div class="font">
-      <input type="text" placeholder="0" />
-
-      <div class="mar">
-        <ul>
-          <li onclick="toggleDropdown('algebra')">Algebra</li>
-          <li onclick="toggleDropdown('trig')">Trigonometri</li>
-          <li onclick="toggleDropdown('calc')">Calculus</li>
-        </ul>
-
-        <div class="dropdown" id="algebra">
-          <button type="button">≥</button>
-          <button type="button">&gt;</button>
-          <button type="button">≤</button>
-          <button type="button">&lt;</button>
-          <button type="button">=</button>
-          <button type="button">^</button>
-          <button type="button">√</button>
-          <button type="button">!</button>
-          <button type="button">π</button>
-          <button type="button">f(x)</button>
-          <button type="button">x</button>
-          <button type="button">y</button>
-          <button type="button">𝓲</button>
-          <button type="button">log</button>
-          <button type="button">∞</button>
-          <button type="button">≠</button>
-          <button type="button">(</button>
-          <button type="button">)</button>
-          <button type="button">∛</button>
-          <button type="button">±</button>
-
-          
-        </div>
-
-        <div class="dropdown" id="trig">
-          <button type="button">sin(</button>
-          <button type="button">cos(</button>
-          <button type="button">tan(</button>
-          <button type="button">csc(</button>
-          <button type="button">sec(</button>
-          <button type="button">cot(</button>     
-          <button type="button" style="font-size: 20px;">sin⁻¹(</button>
-          <button type="button" style="font-size: 20px;">cos⁻¹(</button>
-          <button type="button" style="font-size: 20px;">tan⁻¹(</button>
-          <button type="button" style="font-size: 20px;">csc⁻¹(</button>
-          <button type="button"style="font-size: 20px;">sec⁻¹(</button>
-          <button type="button" style="font-size: 20px;">cot⁻¹(</button>      
-          <button type="button">°</button>
-          <button type="button">∠</button>
-          <button type="button">x</button>
-          <button type="button">y</button>
-          <button type="button">=</button>
-          <button type="button">(</button>
-          <button type="button">)</button>
-          <button type="button">rad</button>
-        </div>
-
-        <div class="dropdown" id="calc">
-          <button type="button" style="font-size: 20px;">d/dx</button>
-          <button type="button">∫</button>
-          <button type="button" style="font-size: 20px;">lim→</button>
-          <button type="button" style="font-size: 20px;">dy/dx</button>
-          <button type="button">f'(x)</button>
-          <button type="button">f''(x)</button>
-          <button type="button">R</button>
-          <button type="button">⊂</button>
-          <button type="button">∀</button>
-          <button type="button">∃</button>
-          <button type="button" style="font-size: 17px;">d²y/dx²</button>
-          <button type="button">∫∫</button>
-          <button type="button">∫∫∫</button>
-          <button type="button">Δx</button>
-          <button type="button">e</button>
-          <button type="button">x</button>
-          <button type="button">y</button>
-          <button type="button">=</button>
-          <button type="button">C</button>
-          <button type="button">∑</button>
-        </div>
-
-        <!-- Calculator Buttons -->
-        <div>
-          <button type="button">7</button>
-          <button type="button">8</button>
-          <button type="button">9</button>
-          <button type="button" class="col">Ac</button>
-          <button type="button" class="col2">÷</button>
-        </div>
-        <div>
-          <button type="button">4</button>
-          <button type="button">5</button>
-          <button type="button">6</button>
-          <button type="button" class="col">del</button>
-          <button type="button" class="col2">x</button>
-        </div>
-        <div>
-          <button type="button">1</button>
-          <button type="button">2</button>
-          <button type="button">3</button>
-          <button type="button" class="col">%</button>
-          <button type="button" class="col2">-</button>
-        </div>
-        <div>
-          <button type="button">00</button>
-          <button type="button">0</button>
-          <button type="button">.</button>
-          <button type="button" class="col">Ans</button>
-          <button type="button" class="col2">+</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const input = document.querySelector("input");
-    const buttons = document.querySelectorAll("button");
-    const expressionBox = { value: "" };
-
-    function toggleDropdown(id) {
-      document.querySelectorAll(".dropdown").forEach(d => {
-        d.style.display = (d.id === id && d.style.display !== "block") ? "block" : "none";
-      });
-    }
-
-    buttons.forEach(button => {
-      button.addEventListener("click", () => {
-        const value = button.textContent.trim();
-        if (value === "Ac") {
-          expressionBox.value = "";
-          input.value = "";
-        } else if (value === "del") {
-          expressionBox.value = expressionBox.value.slice(0, -1);
-          input.value = expressionBox.value;
-        } else if (value === "=") {
-          try {
-            let expr = expressionBox.value.replace(/÷/g, "/").replace(/x/g, "*").replace(/π/g, Math.PI);
-            const result = eval(expr);
-            input.value = result;
-            expressionBox.value = result.toString();
-          } catch {
-            input.value = "Error";
-            expressionBox.value = "";
-          }
-        } else {
-          expressionBox.value += value;
-          input.value = expressionBox.value;
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculator - by Abushad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Lato', sans-serif;
         }
-      });
-    });
-  </script>
+
+        body {
+            background-color: rgba(0, 0, 0, 0.802);
+            color: aliceblue;
+        }
+
+        .contanor {
+            margin: 120px auto;
+            height: 650px;
+            width: 950px;
+            border: 1px solid rgb(196, 190, 190);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 1px 1px 5px 2px rgb(228, 228, 228);
+            background-color: rgb(75, 142, 48);
+        }
+
+        input {
+            margin-top: 50px;
+            width: 100%;
+            height: 60px;
+            text-align: right;
+            font-size: 30px;
+            background-color: black;
+            padding: 20px;
+            border: transparent;
+            border-radius: 10px;
+            color: rgba(181, 181, 181, 0.578);
+        }
+
+        button {
+            font-size: 25px;
+            height: 60px;
+            width: 60px;
+            margin-top: 30px;
+            margin-left: 15px;
+            border-radius: 50px;
+            background-color: rgb(0, 0, 0);
+            box-shadow: 1px 1px 5px 2px rgb(228, 228, 228);
+            color: aliceblue;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:active {
+            background-color: rgb(32, 111, 180);
+            transform: scale(0.9);
+        }
+
+        .mar {
+            margin-top: 40px;
+        }
+
+        h1 {
+            margin-top: 60px;
+            font-size: 70px;
+            text-align: center;
+            color: cadetblue;
+        }
+
+        h1 span {
+            color: darkgoldenrod;
+        }
+
+        h2 {
+
+            font-size: 40px;
+            text-align: center;
+        }
+
+        h2 span {
+            color: coral;
+        }
+
+        ul {
+            display: flex;
+            justify-content: center;
+            gap: 70px;
+            list-style: none;
+            border-bottom: 2px solid rgb(243, 243, 243);
+            padding-bottom: 20px;
+            width: 450px;
+            margin-left: 450px;
+            cursor: pointer;
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            /* Required for right alignment */
+            /* Adjust according to your layout */
+            right: 520px;
+            /* Align from the right */
+            background-color: transparent;
+            padding: 8px;
+            border-radius: 4px;
+            width: 430px;
+            color: black;
+
+        }
+
+        .dropdown button {
+            font-size: 25px;
+            height: 60px;
+            width: 60px;
+            margin-left: 15px;
+            border-radius: 50px;
+            background-color: rgb(206, 11, 11);
+            box-shadow: 1px 1px 5px 2px rgb(228, 228, 228);
+            color: aliceblue;
+            border: none;
+            cursor: pointer;
+
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Advanced <span>Calculator.</span></h1>
+    <h2>Created by <span>Abushad</span></h2>
+
+    <div class="contanor">
+        <div class="font">
+            <input type="text" placeholder="0" />
+
+            <div class="mar">
+                <ul>
+                    <li onclick="toggleDropdown('algebra')">Algebra</li>
+                    <li onclick="toggleDropdown('trig')">Trigonometri</li>
+                    <li onclick="toggleDropdown('calc')">Calculus</li>
+                </ul>
+
+                <div class="dropdown" id="algebra">
+                    <button type="button">≥</button>
+                    <button type="button">&gt;</button>
+                    <button type="button">≤</button>
+                    <button type="button">&lt;</button>
+                    <button type="button">=</button>
+                    <button type="button">^</button>
+                    <button type="button">√</button>
+                    <button type="button">!</button>
+                    <button type="button">π</button>
+                    <button type="button">f(x)</button>
+                    <button type="button">x</button>
+                    <button type="button">y</button>
+                    <button type="button">𝓲</button>
+                    <button type="button">log</button>
+                    <button type="button">∞</button>
+                    <button type="button">≠</button>
+                    <button type="button">(</button>
+                    <button type="button">)</button>
+                    <button type="button">∛</button>
+                    <button type="button">±</button>
+
+
+                </div>
+
+                <div class="dropdown" id="trig">
+                    <button type="button">sin(</button>
+                    <button type="button">cos(</button>
+                    <button type="button">tan(</button>
+                    <button type="button">csc(</button>
+                    <button type="button">sec(</button>
+                    <button type="button">cot(</button>
+                    <button type="button" style="font-size: 20px;">sin⁻¹(</button>
+                    <button type="button" style="font-size: 20px;">cos⁻¹(</button>
+                    <button type="button" style="font-size: 20px;">tan⁻¹(</button>
+                    <button type="button" style="font-size: 20px;">csc⁻¹(</button>
+                    <button type="button" style="font-size: 20px;">sec⁻¹(</button>
+                    <button type="button" style="font-size: 20px;">cot⁻¹(</button>
+                    <button type="button">°</button>
+                    <button type="button">∠</button>
+                    <button type="button">x</button>
+                    <button type="button">y</button>
+                    <button type="button">=</button>
+                    <button type="button">(</button>
+                    <button type="button">)</button>
+                    <button type="button">rad</button>
+                </div>
+
+                <div class="dropdown" id="calc">
+                    <button type="button" style="font-size: 20px;">d/dx</button>
+                    <button type="button">∫</button>
+                    <button type="button" style="font-size: 20px;">lim→</button>
+                    <button type="button" style="font-size: 20px;">dy/dx</button>
+                    <button type="button">f'(x)</button>
+                    <button type="button">f''(x)</button>
+                    <button type="button">R</button>
+                    <button type="button">⊂</button>
+                    <button type="button">∀</button>
+                    <button type="button">∃</button>
+                    <button type="button" style="font-size: 17px;">d²y/dx²</button>
+                    <button type="button">∫∫</button>
+                    <button type="button">∫∫∫</button>
+                    <button type="button">Δx</button>
+                    <button type="button">e</button>
+                    <button type="button">x</button>
+                    <button type="button">y</button>
+                    <button type="button">=</button>
+                    <button type="button">C</button>
+                    <button type="button">∑</button>
+                </div>
+
+                <!-- Calculator Buttons -->
+                <div>
+                    <button type="button">7</button>
+                    <button type="button">8</button>
+                    <button type="button">9</button>
+                    <button type="button" class="col">Ac</button>
+                    <button type="button" class="col2">÷</button>
+                </div>
+                <div>
+                    <button type="button">4</button>
+                    <button type="button">5</button>
+                    <button type="button">6</button>
+                    <button type="button" class="col">del</button>
+                    <button type="button" class="col2">*</button>
+                </div>
+                <div>
+                    <button type="button">1</button>
+                    <button type="button">2</button>
+                    <button type="button">3</button>
+                    <button type="button" class="col">%</button>
+                    <button type="button" class="col2">-</button>
+                </div>
+                <div>
+                    <button type="button">00</button>
+                    <button type="button">0</button>
+                    <button type="button">.</button>
+                    <button type="button" class="col">Ans</button>
+                    <button type="button" class="col2">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <script>
+        const input = document.querySelector("input");
+        const buttons = document.querySelectorAll("button");
+        let lastAnswer = "";
+        const expressionBox = { value: "" };
+
+        function toggleDropdown(id) {
+            document.querySelectorAll(".dropdown").forEach(d => {
+                d.style.display = (d.id === id && d.style.display !== "block") ? "block" : "none";
+            });
+        }
+
+        const symbolMap = {
+            "÷": "/",
+            "*": "*",
+            "x": "*",
+            "π": "pi",
+            "√": "sqrt(",
+            "∛": "cbrt(",
+            "^": "^",
+            "log": "log10(",
+            "sin(": "sin(",
+            "cos(": "cos(",
+            "tan(": "tan(",
+            "csc(": "1/sin(",
+            "sec(": "1/cos(",
+            "cot(": "1/tan(",
+            "sin⁻¹(": "asin(",
+            "cos⁻¹(": "acos(",
+            "tan⁻¹(": "atan(",
+            "e": "e",
+            "rad": "* (pi / 180)",
+            "±": "-",
+            "∞": "Infinity",
+            "=": "!=",
+            "≥": ">=",
+            "≤": "<=",
+        };
+
+        buttons.forEach(button => {
+            button.addEventListener("click", () => {
+                const value = button.textContent.trim();
+
+                if (value === "Ac") {
+                    expressionBox.value = "";
+                    input.value = "";
+                } else if (value === "del") {
+                    expressionBox.value = expressionBox.value.slice(0, -1);
+                    input.value = expressionBox.value;
+            } else if (value === "Ans") {
+                try {
+                    let expr = expressionBox.value;
+
+                    for (let key in symbolMap) {
+                        expr = expr.split(key).join(symbolMap[key]);
+                    }
+
+                    // Brackets balance
+                    const open = (expr.match(/\(/g) || []).length;
+                    const close = (expr.match(/\)/g) || []).length;
+                    expr += ")".repeat(open - close);
+
+                    const result = math.evaluate(expr);
+                    input.value = result;
+                    expressionBox.value = result.toString();
+                    lastAnswer = result.toString();
+                } catch (e) {
+                    input.value = "Error";
+                    expressionBox.value = "";
+                }
+            } else {
+                expressionBox.value += value;
+                input.value = expressionBox.value;
+            }
+        });
+  });
+    </script>
+
 </body>
-</html> 
+
+</html>
