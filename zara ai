@@ -11,14 +11,18 @@ import datetime
 from plyer import notification
 import pyautogui
 import mtranslate
+import open_ai as ai
 import pytesseract
 import cv2
 import time
 from PIL import ImageGrab
 import pygetwindow as gw
-import open_ai as ai
 import re
-
+from google import genai
+from google.genai import types
+from PIL import Image
+from io import BytesIO
+import base64
 # -------------------- CONFIG -------------------- #
 # Set your Tesseract path here
 pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
@@ -150,6 +154,56 @@ def close_application(app_name: str):
         speak(f"Error occurred while closing {app_name}")
         print("Error:", e)
 
+GEMINI_API_KEY = ""
+client_gemini = genai.Client(api_key=GEMINI_API_KEY)
+
+def ask_gemini(question: str) -> str:
+    """Gemini clean short answer"""
+    try:
+        response = client_gemini.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"Answer in max 150 words without ** or markdown formatting:\n{question}",
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0)
+            ),
+        )
+        answer = response.text or ""
+        clean_answer = re.sub(r"\*\*|[`#*_]", "", answer)
+        clean_answer = re.sub(r"\s+", " ", clean_answer).strip()
+        return clean_answer
+    except Exception as e:
+        return f"Gemini error: {e}" 
+def ask_gemini_image(prompt: str):
+    """Generate image from Gemini"""
+    try:
+        response = client_gemini.models.generate_content(
+            model="gemini-2.0-flash-preview-image-generation",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_modalities=['TEXT', 'IMAGE']
+            )
+        )
+
+        for part in response.candidates[0].content.parts:
+            # if getattr(part, "text", None):
+                # अगर Gemini कोई text भी भेजता है तो सुनाओ
+                #speak(part.text)
+            if getattr(part, "inline_data", None):
+                try:
+                    # Base64 decode करो
+                    image = Image.open(BytesIO((part.inline_data.data)))
+                    filename = "zara_image.png"
+                    image.save(filename)
+                    image.show()
+                    speak(f"Image saved as {filename}")
+                except Exception as e:
+                    speak(f"Image decode error: {e}")
+        return True
+    except Exception as e:
+        speak(f"Gemini image error: {e}")
+        return False
+
+            
 # -------------------- MAIN LOOP -------------------- #
 def main_process():
     global last_search_query, INPUT_MODE
@@ -160,8 +214,6 @@ def main_process():
         request = get_command().lower().strip()
         if not request:
             continue
-
-        print("USER:", request)
         # Echo only in text mode to avoid TTS loops
         if INPUT_MODE == 'text':
             speak(request)
@@ -316,8 +368,26 @@ def main_process():
                 speak("Here are the Google results")
             else:
                 speak("Please tell me what to search.")
+        elif request.startswith("zara"):
+            query = request.replace("gemini", "").strip()
+            if query:
+                speak("Alfaz pleas wait...")
+                answer = ask_gemini(query)
+                speak(answer)
+            else:
+                speak("Please Zara ke liye koi sawal pucho.")  
+            continue
+        elif request.startswith("image"):
+           query = request.replace("image", "").strip()
+           if query:
+              speak("Image generate kar rahi hoon Alfaz...")
+              ask_gemini_image(query)
+           else:
+              speak("Please image ke liye koi prompt batao.")
+           continue
 
-        elif "hello" in request:
+
+        elif "?" in request:
             # This block seems to call your custom OpenAI wrapper
             try:
                 response = ai.send(request)
@@ -383,10 +453,11 @@ if __name__ == "__main__":
 
 
 
+
 import google.generativeai as genai
 
 # API Key configure karo
-genai.configure(api_key="AIzaSyBCAQ1L2idBhX5uJ8wrG4XBTdiFIuZwnVQ")
+genai.configure(api_key="")
 
 # Model instance banao
 model = genai.GenerativeModel("gemini-1.5-flash")
