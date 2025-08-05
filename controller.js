@@ -17,31 +17,51 @@ import eel
 from google import genai
 from google.genai import types
 from io import BytesIO
+import sys
 
 # -------------------- CONFIG -------------------- #
-pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 INPUT_MODE = "voice"
 last_search_query = ""
 
 # -------------------- GEMINI API -------------------- #
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
+GEMINI_API_KEY = "AIzaSyAT6vGCAb8L05zzogH9QdSwK2_u409g5Gs"  # apna key daalna
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 # -------------------- INIT EEL -------------------- #
 eel.init("web")  # zara.html folder
 
 # -------------------- SPEAK FUNCTION -------------------- #
+class FrontendLogger:
+    def write(self, message):
+        if message.strip():  # खाली लाइन नहीं भेजेगा
+            try:
+                eel.show_terminal_output(message)
+            except:
+                pass
+        sys.__stdout__.write(message)  # टर्मिनल पर भी दिखाएगा
+
+    def flush(self):
+        sys.__stdout__.flush()
+
+sys.stdout = FrontendLogger()
+# -------------------- SPEAK FUNCTION -------------------- #
+engine = pyttsx3.init()  # सिर्फ एक बार init
+voices = engine.getProperty('voices')
+try:
+    engine.setProperty('voice', voices[2].id)
+except Exception:
+    pass
+engine.setProperty("rate", 170)
+
 def speak(audio: str):
-    print("ZARA:", audio)
-    engine = pyttsx3.init()
-    voices = engine.getProperty('voices')
+    print("\nZara:", audio)
     try:
-        engine.setProperty('voice', voices[2].id)
-    except Exception:
+        eel.show_terminal_output(audio)
+    except:
         pass
-    engine.setProperty("rate", 170)
     engine.say(audio)
     engine.runAndWait()
+
 
 # -------------------- GEMINI TEXT -------------------- #
 def ask_gemini(question: str) -> str:
@@ -144,8 +164,11 @@ def close_application(app_name: str):
 def process_command(user_text):
     global last_search_query
     request = user_text.lower().strip()
+    print(f"\nYou said: {user_text}")
 
-    # ---- Basic Greetings ---- #
+    # हमेशा पहले वही बोले जो यूज़र ने लिखा
+    
+    # ---- Known commands ---- #
     if "hi" in request:
         speak("Welcome, Alfaaz how can I help you.")
 
@@ -275,8 +298,8 @@ def process_command(user_text):
         else:
             speak("Please tell me what to search.")
 
-    elif request.startswith("zara"):
-        query = request.replace("zara", "").strip()
+    elif request.startswith("ai"):
+        query = request.replace("gemini", "").strip()
         if query:
             speak("Alfaz, please wait...")
             answer = ask_gemini(query)
@@ -334,22 +357,44 @@ def process_command(user_text):
         speak("Jarvish band ho raha hai. Bye!")
         os._exit(0)
 
-    else:
-        speak("Yeh command mujhe nahi mila hai")
-
 # -------------------- VOICE MODE -------------------- #
-def get_command_voice() -> str:
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        speak("I am listening")
+def get_command_voice():
+    recognizer = sr.Recognizer()
+    mics = sr.Microphone.list_microphone_names()
+
+    if not mics:
+        print("❌ No microphone found. Please connect one.")
+        return ""
+
+    # Try opening mic safely
+    try:
+        with sr.Microphone() as source:
+            #  print(f"🎤 Using default mic: {mics[0]}")
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source)
+    except OSError:
         try:
-            audio = r.listen(source, phrase_time_limit=4)
-            content = r.recognize_google(audio, language='en-IN')
-            print("You said:", content)
-            return content
-        except:
+            print(f"⚠ Default mic failed. Using: {mics[0]}")
+            with sr.Microphone(device_index=0) as source:
+                recognizer.adjust_for_ambient_noise(source)
+                audio = recognizer.listen(source)
+        except Exception as e:
+            print(f"❌ Could not access microphone: {e}")
             return ""
+    except Exception as e:
+        print(f"❌ Mic error: {e}")
+        return ""
+
+    # Recognize speech
+    try:
+        return recognizer.recognize_google(audio, language="en-IN")
+    except sr.UnknownValueError:
+        return ""
+    except sr.RequestError:
+        print("⚠ Could not connect to Google Speech API")
+        return ""
+
+
 
 def voice_loop():
     while True:
@@ -359,120 +404,6 @@ def voice_loop():
 
 # -------------------- START -------------------- #
 if __name__ == "__main__":
-    import threading
-    threading.Thread(target=voice_loop, daemon=True).start()
-    eel.start("zara.html", size=(1000, 1200))
-
-
-
-$(document).ready(function () {
-
-    var siriWave = new SiriWave({
-        container: document.getElementById("siri-container"),
-        width: 640,
-        style: "ios9",
-        amplitude: 1,
-        speed: 0.3,
-        height: 200,
-        autostart: false
-    });
-
-    let audioContext, analyser, microphone, dataArray;
-
-    // Start mic amplitude analyser
-    async function startAmplitudeTracker() {
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-            microphone = audioContext.createMediaStreamSource(stream);
-            analyser = audioContext.createAnalyser();
-            analyser.fftSize = 256;
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-            microphone.connect(analyser);
-
-            function updateAmplitude() {
-                analyser.getByteTimeDomainData(dataArray);
-                let sum = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                    sum += Math.abs(dataArray[i] - 128);
-                }
-                let avg = sum / dataArray.length;
-                siriWave.setAmplitude(Math.min(avg / 5, 5)); // limit amplitude
-                requestAnimationFrame(updateAmplitude);
-            }
-            updateAmplitude();
-
-        } catch (err) {
-            console.error("Mic error for amplitude tracking:", err);
-        }
-    }
-
-    function startListening() {
-        if (!('webkitSpeechRecognition' in window)) {
-            alert("Speech Recognition API is not supported in this browser. Use Chrome or Edge.");
-            return;
-        }
-
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = "hi-IN";  // Change to en-IN for English
-        recognition.interimResults = true;
-        recognition.continuous = true;
-
-        $(".siri-message").text("🎤 Listening...");
-        siriWave.start();
-        startAmplitudeTracker();
-
-        let finalTranscript = "";
-        let lastSpokenTime = Date.now();
-
-        recognition.onresult = function (event) {
-            let interimTranscript = "";
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + " ";
-                    lastSpokenTime = Date.now();
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                    lastSpokenTime = Date.now();
-                }
-            }
-            $(".siri-message").text(interimTranscript || finalTranscript);
-        };
-
-        recognition.onerror = function (event) {
-            $(".siri-message").text("⚠ Mic error: " + event.error);
-            siriWave.stop();
-        };
-
-        recognition.onend = function () {
-            siriWave.stop();
-            if (finalTranscript.trim() === "") {
-                $(".siri-message").text("❌ No voice detected");
-            } else {
-                $(".siri-message").text("✅ You said: " + finalTranscript);
-                eel.process_command(finalTranscript);
-            }
-        };
-
-        recognition.start();
-
-        const silenceCheck = setInterval(() => {
-            if (Date.now() - lastSpokenTime > 3000) {
-                recognition.stop();
-                clearInterval(silenceCheck);
-            }
-        }, 500);
-    }
-
-    // Mic Button Click
-    $("#MicBtn").click(function () {
-        $("#Oval").attr("hidden", true);
-        $("#SiriWave").attr("hidden", false);
-        startListening();
-    });
-
-});
 
 
 
@@ -496,7 +427,8 @@ $(document).ready(function () {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js" type="text/javascript"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/vendore/texllate/animate.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
   <link rel="stylesheet" href="zara.css" />
 </head>
 
@@ -509,129 +441,291 @@ $(document).ready(function () {
             <div>
               <div id="Loader" class="svg-frame mb-4">>
                 <section id="Oval" class="mb-4">
-                  <div class="row">
-                    <div class="col-md-1"></div>
-                    <div class="col-md-10">
-                      <div class="d-flex justify-content-center align-items-center" style="height: 80vh">
-                        <canvas id="canvasOne" width="700" height="420" style="position: absolute"></canvas>
-                        <div id="JarvisHood">
-                          <div class="square">
-                            <span class="circle"></span>
-                            <span class="circle"></span>
-                            <span class="circle"></span>
-                          </div>
-                        </div>
-                      </div>
-                      <h4 class="text-light text-center">Ask me Anything</h4>>
-
-                      <div class="col-md-12 mt-4 pt-4">
-                        <div class="text-center">
-                          <div id="TextInput" class="d-flex">
-                            <input type="text" id="chatbox" name="chatbox" placeholder="Ask me anything..."
-                              class="input-field" />
-                            <button id="MicBtn" class="glow-on-hover">
-                              <i class="bi bi-mic"></i>
-                            </button>
-                            <button id="ChatBtn" class="glow-on-hover">
-                              <i class="bi bi-chat-dots"></i>
-                            </button>
-                            <button id="SettingBtn" class="glow-on-hover">
-                              <i class="bi bi-gear-wide-connected"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                  </div>
+                  <div id="live-text"></div>
                 </section>
 
-                <div id="SiriWave" class="mb-4" hidden>
-                  <div class="container">
-                    <div class="row">
-                      <div class="col-md-12">
-                        <div class="d-flex justify-content-center align-items-center" style="height: 100vh">
-                          <div class="">
-                            <p class="text-start text-light mb-4 siri-message">
-                              Hello, I am Your Assistant
-                            </p>
-                            <div id="siri-container"></div>
-                          </div>
+
+                <div class="row">
+                  <div class="col-md-1"></div>
+                  <div class="col-md-10">
+                    <div class="d-flex justify-content-center align-items-center" style="height: 80vh">
+                      <canvas id="canvasOne" width="700" height="420" style="position: absolute"></canvas>
+                      <div id="JarvisHood">
+                        <div class="square">
+                          <span class="circle"></span>
+                          <span class="circle"></span>
+                          <span class="circle"></span>
+                        </div>
+                      </div>
+                    </div>
+                    <h4 class=" text-center" style="color: rgb(213, 213, 213);">I'am <span style="color: aqua;">ZARA
+                      </span>
+                      Ai creat by- <span style="color: rgb(255, 2, 2); "> Alfaz</span> azmi</h4>
+
+                    <h5 class=" text-center" style="color: rgb(213, 213, 213);">Ask me Anything</h5>
+
+                    <div class="col-md-12 mt-4 pt-4" style="width:800PX">
+                      <div class="text-center">
+                        <div id="TextInput" class="d-flex">
+                          <input type="text" id="chatbox" name="chatbox" placeholder="Ask me anything..."
+                            class="input-field" />
+                          <button id="MicBtn" class="glow-on-hover">
+                            <i class="bi bi-mic"></i>
+                          </button>
+                          <button id="ChatBtn" class="glow-on-hover">
+                            <i class="bi bi-chat-dots"></i>
+                          </button>
+                          <button id="SettingBtn" class="glow-on-hover">
+                            <i class="bi bi-gear-wide-connected"></i>
+                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
+                  <div class="col-md-1"></div>
                 </div>
-              </div>
-              <script type="text/javascript" src="/eel.js"></script>
-              <script type="text/javascript" src="/eel.js"></script>
-              <script>
-                // Chat button पर click event
-                document.getElementById("ChatBtn").addEventListener("click", function () {
-                  let text = document.getElementById("chatbox").value;
-                  if (text.trim() !== "") {
-                    eel.process_command(text);
-                    document.getElementById("chatbox").value = "";
+                <style>
+                  .moving-text {
+                    display: inline-block;
+                    white-space: nowrap;
+                    animation: moveText 6s linear infinite;
                   }
-                });
 
-                // Python से reply आने पर HTML में show करना
-                eel.expose(show_reply);
-                function show_reply(user_text, reply) {
-                  let chatArea = document.getElementById("chat-area");
+                  @keyframes moveText {
+                    0% {
+                      transform: translateX(100%);
+                    }
 
-                  // User message
-                  let userMsg = document.createElement("div");
-                  userMsg.style.textAlign = "right";
-                  userMsg.innerHTML = `<b>You:</b> ${user_text}`;
-                  chatArea.appendChild(userMsg);
+                    100% {
+                      transform: translateX(-100%);
+                    }
+                  }
+                  
+                </style>
 
-                  // Zara reply
-                  let botMsg = document.createElement("div");
-                  botMsg.style.textAlign = "left";
-                  botMsg.innerHTML = `<b>Zara:</b> ${reply}`;
-                  chatArea.appendChild(botMsg);
+                <script>
+                  document.addEventListener("DOMContentLoaded", () => {
+                    // Select all heading tags h1 to h6
+                    document.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((heading) => {
+                      let text = heading.innerHTML; // Original text
+                      heading.innerHTML = `<span class="moving-text">${text}</span>`;
+                    });
+                  });
+                </script>
 
-                  chatArea.scrollTop = chatArea.scrollHeight; // Auto-scroll
-                }
-              </script>
+    </section>
+
+    <div id="SiriWave" class="mb-4" hidden>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="d-flex justify-content-center align-items-center" style="height: 100vh">
+              <div class="">
+                <p class="text-start text-light mb-4 siri-message">
+                  Hello, I am Your Assistant
+                </p>
+                <div id="siri-container"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Chat button पर click event
+    document.getElementById("ChatBtn").addEventListener("click", function () {
+      let text = document.getElementById("chatbox").value;
+      if (text.trim() !== "") {
+        eel.process_command(text);
+        document.getElementById("chatbox").value = "";
+      }
+    });
+
+    // Python से reply आने पर HTML में show करना
+    eel.expose(show_reply);
+    function show_reply(user_text, reply) {
+      let chatArea = document.getElementById("chat-area");
+
+      // User message
+      let userMsg = document.createElement("div");
+      userMsg.style.textAlign = "right";
+      userMsg.innerHTML = `<b>You:</b> ${user_text}`;
+      chatArea.appendChild(userMsg);
+
+      // Zara reply
+      let botMsg = document.createElement("div");
+      botMsg.style.textAlign = "left";
+      botMsg.innerHTML = `<b>Zara:</b> ${reply}`;
+      chatArea.appendChild(botMsg);
+
+      chatArea.scrollTop = chatArea.scrollHeight; // Auto-scroll
+    }
+  </script>
 
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FitText.js/1.2.0/jquery.fittext.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lettering.js/0.7.0/jquery.lettering.min.js"></script>
 
-              <!--Jquery  -->
-              <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <!--Jquery  -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 
-              <!-- Bootstrap -->
-              <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-                integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-                crossorigin="anonymous"></script>
+  <!-- Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
 
-              <!-- Particle js -->
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-              <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-              <script src="zara.js"></script>
+  <!-- Particle js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+  <script src="zara.js"></script>
 
-              <!-- Siri wave -->
-              <script src="https://unpkg.com/siriwave/dist/siriwave.umd.min.js"></script>
+  <!-- Siri wave -->
+  <script src="https://unpkg.com/siriwave/dist/siriwave.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/siriwave/dist/siriwave.min.js"></script>
 
-              <!-- Texllate js -->
-              <script src="assets/vendore/texllate/jquery.fittext.js"></script>
-              <script src="assets/vendore/texllate/jquery.lettering.js"></script>
-              <script src="http://jschr.github.io/textillate/jquery.textillate.js"></script>
+  <!-- Texllate js -->
+  <script src="assets/vendore/texllate/jquery.fittext.js"></script>
+  <script src="assets/vendore/texllate/jquery.lettering.js"></script>
+  <script src="http://jschr.github.io/textillate/jquery.textillate.js"></script>
 
-              <!-- lottie files -->
-              <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-              <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"
-                type="module"></script>
+  <!-- lottie files -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 
-              <script src="main.js"></script>
-              <script type="text/javascript" src="/eel.js"></script>
-              <script src="controller.js"></script>
+  <script src="main.js"></script>
+  <script type="text/javascript" src="/eel.js"></script>
+  <script src="controller.js"></script>
 
 </body>
 
 </html>
 
 
+$(document).ready(function () {
+    console.log("✅ Document ready");
+
+    // SiriWave init
+    var siriWave = new SiriWave({
+        container: document.getElementById("siri-container"),
+        width: 640,
+        style: "ios9",
+        amplitude: 1,
+        speed: 0.3,
+        height: 200,
+        autostart: false
+    });
+
+    let recognition;
+    let isListening = false;
+
+    eel.expose(show_terminal_output);
+    function show_terminal_output(message) {
+        let liveText = document.getElementById("live-text");
+        liveText.innerText += message + "\n";
+        liveText.scrollTop = liveText.scrollHeight;
+    }
+
+    // Input box typing
+    $("#chatbox").on("input", function () {
+        $("#live-text").text($(this).val());
+    });
+
+    // Chat send
+    $("#ChatBtn").click(function () {
+        let text = $("#chatbox").val().trim();
+        if (text !== "") {
+            $("#live-text").text(text);
+            eel.process_command(text);
+            $("#chatbox").val("");
+        }
+    });
+
+    // Python reply
+    eel.expose(show_reply_on_ai);
+    function show_reply_on_ai(user_text, reply) {
+        $("#live-text").text(reply);
+    }
+
+    // Mic button
+    $("#MicBtn").click(function () {
+        if (!isListening) {
+            console.log("🎤 Mic START");
+            $("#Oval").hide();
+            $("#SiriWave").show();
+            siriWave.start();
+            startListening();
+            isListening = true;
+        } else {
+            console.log("🛑 Mic STOP");
+            stopListening();
+            isListening = false;
+        }
+    });
+
+    function startListening() {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Speech Recognition API not supported. Use Chrome or Edge.");
+            return;
+        }
+
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "hi-IN";
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        $(".siri-message").text("🎤 Listening...");
+        let finalTranscript = "";
+        let hasSpoken = false;
+
+        recognition.onresult = function (event) {
+            let interimTranscript = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + " ";
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            if (interimTranscript || finalTranscript) {
+                hasSpoken = true;
+                $(".siri-message").text(interimTranscript || finalTranscript);
+            }
+
+            if (finalTranscript.trim() !== "") {
+                eel.process_command(finalTranscript);
+                finalTranscript = "";
+            }
+        };
+
+        recognition.onerror = function (event) {
+            console.error("⚠ Mic error:", event.error);
+            $(".siri-message").text("⚠ Mic error: " + event.error);
+        };
+
+        recognition.onend = function () {
+            console.log("🔄 Restarting mic...");
+            if (isListening) startListening();
+        };
+
+        recognition.start();
+
+        setTimeout(() => {
+            if (!hasSpoken) $(".siri-message").text("🎤 Listening...");
+        }, 1000);
+    }
+
+    function stopListening() {
+        if (recognition) recognition.stop();
+        siriWave.stop();
+        $("#SiriWave").hide();
+        $("#Oval").show();
+        $(".siri-message").text("🛑 Mic stopped");
+    }
+});
 
 
+        
+    threading.Thread(target=voice_loop, daemon=True).start()
+    eel.start("zara.html", size=(1000, 1200))
