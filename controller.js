@@ -24,7 +24,8 @@ INPUT_MODE = "voice"
 last_search_query = ""
 
 # -------------------- GEMINI API -------------------- #
-GEMINI_API_KEY = "AIzaSyAT6vGCAb8L05zzogH9QdSwK2_u409g5Gs"  # apna key daalna
+GEMINI_API_KEY = "
+    "  # apna key daalna
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 # -------------------- INIT EEL -------------------- #
@@ -729,3 +730,4 @@ $(document).ready(function () {
         
     threading.Thread(target=voice_loop, daemon=True).start()
     eel.start("zara.html", size=(1000, 1200))
+
